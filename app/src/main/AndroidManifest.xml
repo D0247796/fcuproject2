@@ -18,16 +18,28 @@
             android:name=".StartPage"
             android:label="機器上APP"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar">
+          >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Bluetooth" />
-        <activity android:name=".MainActivity" />
-        <activity android:name=".RunPage"></activity>
+        <activity
+            android:name=".RunPage"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+            android:name=".Note"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+            android:name=".AddNote"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
     </application>
 
 </manifest>

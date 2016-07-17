@@ -1,11 +1,15 @@
 package lincyu.fcuproject2;
 
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -30,9 +34,9 @@ import java.util.Set;
 import java.util.UUID;
 
 public class StartPage extends AppCompatActivity {
-    int change=0;
+    int change=0 ,test=0;
     TextView tv_state,tv_ip;
-    Button btn_test;
+
     InetAddress client_ip;
     String  server_msg="";
     ListView lv_bluetoothdevice;
@@ -41,6 +45,7 @@ public class StartPage extends AppCompatActivity {
     BluetoothAdapter bluetoothAdapter;//建立藍芽設備
     ArrayList<BluetoothDevice> pairedDeviceArrayList;//new bluetooth arraylist存放BLE的設備資料
     ArrayAdapter<BluetoothDevice> pairedDeviceAdapter;//new 藍芽設備容器
+    Thread TCP_SocketServerThread;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,13 +53,13 @@ public class StartPage extends AppCompatActivity {
 
         tv_state=(TextView)findViewById(R.id.tv_state);
         tv_ip=(TextView)findViewById(R.id.tv_IP);
-        btn_test=(Button)findViewById(R.id.btn_test);
+
         lv_bluetoothdevice=(ListView)findViewById(R.id.lv_bluetoothdevice);
 
-        btn_test.setOnClickListener(btn_test_CL);
+
 
         tv_ip.setText(getIpAddress());//拿取自己IP
-        Thread TCP_SocketServerThread = new Thread(new TCP_SocketServerThread());
+        TCP_SocketServerThread = new Thread(new TCP_SocketServerThread());
         TCP_SocketServerThread.start();
         //藍芽
         SetupPairedDevices();
@@ -62,17 +67,60 @@ public class StartPage extends AppCompatActivity {
 
     }
 
-    private View.OnClickListener btn_test_CL =new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
 
-            Intent intent = new Intent();
-            intent.setClass(StartPage.this,MainActivity.class);
-            startActivity(intent);
-            finish();
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        switch (id){
+            case R.id.action_settings:
+                AlertDialog.Builder ad = new AlertDialog.Builder(this);
+                ad.setTitle("操作說明");
+                ad.setMessage("方向鍵控制\n開關決定是否傳影音過去\n當發生警告事項時，警告燈會變\nMenu中可查詢車子身在的溫濕度");
+                DialogInterface.OnClickListener listener =
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface di, int i) {
+                            }
+                        };
+                ad.setPositiveButton("確定", listener);
+                ad.show();
+                break;
+
+
+
+            case R.id.action_notes:
+                String ip="";
+                try {
+                    String clientip = client_ip.toString();
+                   ip = clientip.substring(1,clientip.length());
+                }catch (Exception e){};
+
+                    Intent intent = new Intent();
+                    intent.putExtra("IP", ip);
+                    intent.setClass(StartPage.this, Note.class);
+                    startActivity(intent);
+
+                break;
+
 
         }
-    };
+
+        //noinspection SimplifiableIfStatement
+
+
+        return super.onOptionsItemSelected(item);
+    }
+
+
     //Server端
     private class TCP_SocketServerThread extends Thread {
 
@@ -98,14 +146,15 @@ public class StartPage extends AppCompatActivity {
 
                     cleint_msg = TCP_server_din.readUTF(); //這是裡傳來的訊息
                     TCP_server_dout.writeUTF("Car_Server");
-                    if(cleint_msg.equals("User_Client") && change==0){
-                        change=1;
-                        client_ip = TCP_server_socket.getInetAddress();
-                        Intent intent = new Intent();
-                        intent.setClass(StartPage.this,RunPage.class);
-                        startActivity(intent);
-
-                    }
+                    //切換畫面
+//                    if(cleint_msg.equals("User_Client") && change==0){
+//                        change=1;
+//                        client_ip = TCP_server_socket.getInetAddress();
+//                        Intent intent = new Intent();
+//                        intent.setClass(StartPage.this,RunPage.class);
+//                        startActivity(intent);
+//
+//                    }
                     if(myThreadConnected!=null) {
                         byte[] bluetoothmsg = cleint_msg.toString().getBytes();
                         myThreadConnected.write(bluetoothmsg);//執行緒output訊息
@@ -119,6 +168,7 @@ public class StartPage extends AppCompatActivity {
                             tv_state.setText(cleint_msg);
                         }
                     });
+
 
 
                 }
@@ -240,10 +290,7 @@ public class StartPage extends AppCompatActivity {
 
         return ip;
     }
-    public void onResume() {
-        super.onResume();
 
-    }
     //藍芽
     public void SetupPairedDevices() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();//取得藍牙的初始Adapter
@@ -272,6 +319,7 @@ public class StartPage extends AppCompatActivity {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     BluetoothDevice device = (BluetoothDevice) parent.getItemAtPosition(position);//取得選取position項目的藍牙設備資料
+
                     myThreadConnectBTdevice = new ThreadConnectBTdevice(device); //設定藍牙連線的執行緒
                     myThreadConnectBTdevice.start(); //啟動此執行緒
                 }
